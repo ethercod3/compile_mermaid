@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
     except CompileError as error:
-        print(f"Ошибка: {error}", file=sys.stderr)
+        print(f"Error: {error}", file=sys.stderr)
         return 1
 
 

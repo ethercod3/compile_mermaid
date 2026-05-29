@@ -33,8 +33,7 @@ def find_mmdc() -> list[str]:
     mmdc = command_path("mmdc") or command_path("mmdc.cmd")
     if mmdc is None:
         raise CompileError(
-            "Не найдена программа mmdc для сборки Mermaid-диаграмм. "
-            "Установите Mermaid CLI и убедитесь, что команда 'mmdc' доступна в терминале."
+            "The mmdc command was not found. Install Mermaid CLI and make sure 'mmdc' is available in PATH."
         )
 
     return [mmdc]
@@ -44,8 +43,7 @@ def find_pdfcrop() -> list[str]:
     pdfcrop = command_path("pdfcrop") or command_path("pdfcrop.cmd")
     if pdfcrop is None:
         raise CompileError(
-            "Не найдена программа pdfcrop для обрезки Mermaid-диаграмм. "
-            "Установите TeX Live/MiKTeX с pdfcrop или запустите скрипт с флагом --no-crop."
+            "The pdfcrop command was not found. Install TeX Live/MiKTeX with pdfcrop or run with --no-crop."
         )
 
     return [pdfcrop]
@@ -64,7 +62,7 @@ def crop_pdf(output_file: Path, pdfcrop: list[str]) -> None:
         code, stdout, stderr = run_external(cmd)
         if code != 0:
             details = (stderr or stdout).strip()
-            raise CompileError(f"Не удалось обрезать Mermaid-PDF.\nКоманда: {' '.join(cmd)}\n{details}")
+            raise CompileError(f"Failed to crop Mermaid PDF.\nCommand: {' '.join(cmd)}\n{details}")
         os.replace(cropped_file, output_file)
     finally:
         if cropped_file.exists():
@@ -85,10 +83,10 @@ def process_file(f: Path, dst: Path, mmdc: list[str], pdfcrop: list[str] | None)
     if code != 0:
         details = (stderr or stdout).strip()
         return (
-            f"[ОШИБКА] Не удалось собрать диаграмму {f.name}\n"
-            f"Команда: {' '.join(cmd)}\n"
-            f"Обычный вывод:\n{stdout.strip() or 'вывода нет'}\n"
-            f"Вывод ошибок:\n{details or 'вывода ошибок нет'}"
+            f"[ERROR] Failed to compile diagram {f.name}\n"
+            f"Command: {' '.join(cmd)}\n"
+            f"Stdout:\n{stdout.strip() or 'no stdout'}\n"
+            f"Stderr:\n{details or 'no stderr'}"
         )
 
     if pdfcrop is not None:
@@ -115,19 +113,19 @@ def run(config: CompileConfig | None = None) -> int:
     dst = config.dst.resolve()
 
     if not src.exists():
-        raise CompileError(f"Папка с Mermaid-диаграммами не найдена: {src}")
+        raise CompileError(f"Mermaid source directory was not found: {src}")
 
     dst.mkdir(parents=True, exist_ok=True)
     files = [f for f in src.iterdir() if f.is_file() and f.suffix.lower() in EXTENSIONS]
 
     if not files:
-        print(f"В папке {src} не найдены Mermaid-файлы для сборки.")
+        print(f"No Mermaid files found in {src}.")
         return 0
 
     files_to_compile = files if config.force else [f for f in files if needs_compile(f, dst)]
 
     if not files_to_compile:
-        print("Все Mermaid-диаграммы уже актуальны.")
+        print("All Mermaid diagrams are up to date.")
         return 0
 
     mmdc = find_mmdc()
@@ -144,11 +142,11 @@ def run(config: CompileConfig | None = None) -> int:
                 result = future.result()
                 if result:
                     print(result)
-                    if result.startswith("[ОШИБКА]"):
+                    if result.startswith("[ERROR]"):
                         has_errors = True
             except Exception as error:
                 f = futures[future]
-                print(f"[ОШИБКА] Не удалось обработать {f.name}: {error}")
+                print(f"[ERROR] Failed to process {f.name}: {error}")
                 has_errors = True
 
     return 1 if has_errors else 0

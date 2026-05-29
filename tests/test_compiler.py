@@ -69,7 +69,7 @@ def test_run_returns_error_when_any_diagram_fails(monkeypatch, tmp_path: Path) -
     monkeypatch.setattr(
         compiler,
         "process_file",
-        lambda f, dst, mmdc, pdfcrop: f"[ОШИБКА] Не удалось собрать диаграмму {f.name}",
+        lambda f, dst, mmdc, pdfcrop: f"[ERROR] Failed to compile diagram {f.name}",
     )
 
     assert compiler.run(CompileConfig(src=src_dir, dst=out_dir)) == 1
@@ -94,7 +94,7 @@ def test_run_skips_diagrams_when_pdf_is_newer(monkeypatch, tmp_path: Path, capsy
     )
 
     assert compiler.run(CompileConfig(src=src_dir, dst=out_dir)) == 0
-    assert "уже актуальны" in capsys.readouterr().out
+    assert "up to date" in capsys.readouterr().out
 
 
 def test_run_compiles_newer_diagrams(monkeypatch, tmp_path: Path) -> None:
