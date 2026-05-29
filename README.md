@@ -7,13 +7,13 @@ Small CLI for compiling Mermaid diagram sources into PDF files.
 From a project that contains `mermaid/` and `figures/`:
 
 ```powershell
-uvx --from ./compile_mermaid compile-mermaid
+uvx --from git+https://github.com/ethercod3/compile_mermaid.git compile-mermaid
 ```
 
-From another project:
+For local development from this repository:
 
 ```powershell
-uvx --from ../compile_mermaid compile-mermaid
+uvx --from . compile-mermaid
 ```
 
 Options:

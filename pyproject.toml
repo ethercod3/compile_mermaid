@@ -24,6 +24,11 @@ classifiers = [
 ]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/ethercod3/compile_mermaid"
+Repository = "https://github.com/ethercod3/compile_mermaid"
+Issues = "https://github.com/ethercod3/compile_mermaid/issues"
+
 [project.optional-dependencies]
 dev = [
   "black==26.3.1",
