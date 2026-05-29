@@ -12,6 +12,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--src", type=Path, default=Path("mermaid"), help="Source directory with Mermaid files.")
     parser.add_argument("--dst", type=Path, default=Path("figures"), help="Output directory for generated PDFs.")
     parser.add_argument("--no-crop", action="store_true", help="Skip pdfcrop after mmdc generation.")
+    parser.add_argument("--force", action="store_true", help="Rebuild all diagrams, even when PDFs are up to date.")
     parser.add_argument(
         "--max-workers",
         type=int,
@@ -31,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
                 src=args.src,
                 dst=args.dst,
                 no_crop=args.no_crop,
+                force=args.force,
                 max_workers=args.max_workers,
             )
         )

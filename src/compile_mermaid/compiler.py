@@ -21,6 +21,7 @@ class CompileConfig:
     src: Path = Path("mermaid")
     dst: Path = Path("figures")
     no_crop: bool = False
+    force: bool = False
     max_workers: int = MAX_WORKERS_LIMIT
 
 
@@ -96,6 +97,18 @@ def process_file(f: Path, dst: Path, mmdc: list[str], pdfcrop: list[str] | None)
     return f"[OK] {f.name} -> {output_file.name}"
 
 
+def output_path(src_file: Path, dst: Path) -> Path:
+    return dst / f"{src_file.stem}.pdf"
+
+
+def needs_compile(src_file: Path, dst: Path) -> bool:
+    pdf_file = output_path(src_file, dst)
+    if not pdf_file.exists():
+        return True
+
+    return src_file.stat().st_mtime > pdf_file.stat().st_mtime
+
+
 def run(config: CompileConfig | None = None) -> int:
     config = config or CompileConfig()
     src = config.src.resolve()
@@ -105,20 +118,26 @@ def run(config: CompileConfig | None = None) -> int:
         raise CompileError(f"Папка с Mermaid-диаграммами не найдена: {src}")
 
     dst.mkdir(parents=True, exist_ok=True)
-    mmdc = find_mmdc()
-    pdfcrop = None if config.no_crop else find_pdfcrop()
-
     files = [f for f in src.iterdir() if f.is_file() and f.suffix.lower() in EXTENSIONS]
 
     if not files:
         print(f"В папке {src} не найдены Mermaid-файлы для сборки.")
         return 0
 
-    max_workers = min(max(1, config.max_workers), len(files))
+    files_to_compile = files if config.force else [f for f in files if needs_compile(f, dst)]
+
+    if not files_to_compile:
+        print("Все Mermaid-диаграммы уже актуальны.")
+        return 0
+
+    mmdc = find_mmdc()
+    pdfcrop = None if config.no_crop else find_pdfcrop()
+
+    max_workers = min(max(1, config.max_workers), len(files_to_compile))
     has_errors = False
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(process_file, f, dst, mmdc, pdfcrop): f for f in files}
+        futures = {executor.submit(process_file, f, dst, mmdc, pdfcrop): f for f in files_to_compile}
 
         for future in as_completed(futures):
             try:
